@@ -1,11 +1,11 @@
 import { loginUser, registerUser } from "../api.js";
+import { sanitizeHtml } from "../sanitize.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
 
 export function renderAuthPageComponent({ appEl, setUser }) {
   let isLoginMode = true;
   let imageUrl = "";
-
   const renderForm = () => {
     const appHtml = `
       <div class="page-container">
@@ -51,21 +51,16 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           </div>
       </div>    
 `;
-
     appEl.innerHTML = appHtml;
-
     // Не вызываем перерендер, чтобы не сбрасывалась заполненная форма
     // Точечно обновляем кусочек дом дерева
     const setError = (message) => {
       appEl.querySelector(".form-error").textContent = message;
     };
-
     renderHeaderComponent({
       element: document.querySelector(".header-container"),
     });
-
     const uploadImageContainer = appEl.querySelector(".upload-image-container");
-
     if (uploadImageContainer) {
       renderUploadImageComponent({
         element: appEl.querySelector(".upload-image-container"),
@@ -74,30 +69,27 @@ export function renderAuthPageComponent({ appEl, setUser }) {
         },
       });
     }
-
     document.getElementById("login-button").addEventListener("click", () => {
       setError("");
-
       if (isLoginMode) {
         const login = document.getElementById("login-input").value;
         const password = document.getElementById("password-input").value;
-
         if (!login) {
           alert("Введите логин");
           return;
         }
-
         if (!password) {
           alert("Введите пароль");
           return;
         }
 
         loginUser({
-          login: login,
-          password: password,
+          login: sanitizeHtml(login),
+          password: sanitizeHtml(password),
         })
           .then((user) => {
             setUser(user.user);
+            console.log(user.user);
           })
           .catch((error) => {
             console.warn(error);
@@ -115,21 +107,19 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           alert("Введите логин");
           return;
         }
-
         if (!password) {
           alert("Введите пароль");
           return;
         }
-
         if (!imageUrl) {
           alert("Не выбрана фотография");
           return;
         }
 
         registerUser({
-          login: login,
-          password: password,
-          name: name,
+          login: sanitizeHtml(login),
+          password: sanitizeHtml(password),
+          name: sanitizeHtml(name),
           imageUrl,
         })
           .then((user) => {
@@ -141,12 +131,10 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           });
       }
     });
-
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLoginMode = !isLoginMode;
       renderForm();
     });
   };
-
   renderForm();
 }

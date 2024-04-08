@@ -2,7 +2,6 @@
   Это стили Дизайн системы, сквозные стили для элементов интерфейса
   всего приложения: шрифты, кнопки, инпуты и так далее
 */
-
 @font-face {
   font-family: "StratosSkyeng";
   font-style: normal;
@@ -10,7 +9,6 @@
   font-display: swap;
   src: url("./assets/fonts/stratosskyengweb-regular.woff2") format("woff2");
 }
-
 @font-face {
   font-family: "StratosSkyeng";
   font-style: normal;
@@ -18,12 +16,10 @@
   font-display: swap;
   src: url("./assets/fonts/stratosskyengweb-medium.woff2") format("woff2");
 }
-
 html {
   /* скрывает скролбары в firefox */
   scrollbar-width: none;
 }
-
 body {
   margin: 0;
   padding: 0;
@@ -32,16 +28,13 @@ body {
   font-size: 14px;
   line-height: 18px;
 }
-
 /* скрывает скролбары в chrome */
 body::-webkit-scrollbar {
   display: none;
 }
-
 p {
   margin: 0;
 }
-
 .button,
 .secondary-button {
   display: block;
@@ -53,7 +46,6 @@ p {
   color: #ffffff;
   border: none;
 }
-
 .link-button {
   display: inline;
   border: 0;
@@ -62,37 +54,41 @@ p {
   color: #565eef;
   cursor: pointer;
 }
-
 .button:hover {
   background-color: #6d73ff;
 }
-
 .button[disabled="true"],
 .secondary-button[disabled="true"] {
   background-color: #f4f5f6;
   color: rgba(153, 153, 153, 0.6);
   pointer-events: none;
 }
-
 .button:active {
   background-color: #4f56ce;
 }
-
 .secondary-button {
   background-color: #edecff;
   color: #565eef;
 }
-
 .secondary-button:hover {
   background-color: #f2eeff;
 }
-
 .secondary-button:active {
   background-color: #d8d7ff;
 }
-
 .input {
   height: 36px;
+  box-sizing: border-box;
+  padding: 15px;
+  font-size: 14px;
+  line-height: 18px;
+  color: rgb(4, 18, 27);
+  border: none;
+  border-radius: 5px;
+  background-color: #e8e8e8;
+}
+
+.textarea {
   box-sizing: border-box;
   padding: 15px;
   font-size: 14px;
@@ -106,22 +102,18 @@ p {
 .input .-error {
   background-color: #fff;
 }
-
 .input:focus {
   background-color: #fff;
 }
-
 .textarea {
   padding: 15px;
   resize: none;
   width: 100%;
   height: 100px;
 }
-
 strong {
   font-weight: 500;
 }
-
 /** Анимация загрузки **/
 .loader {
   display: inline-block;
