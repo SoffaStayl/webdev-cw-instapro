@@ -1,4 +1,5 @@
-import { getPosts, getUserPosts, token } from "./api.js";
+import { getPosts } from "./api.js";
+import { postPosts , fetchPostsUser, deletefetchPost} from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -15,27 +16,45 @@ import {
   removeUserFromLocalStorage,
   saveUserToLocalStorage,
 } from "./helpers.js";
-import { renderUserPostsPageComponent } from "./components/user-post-page-component.js";
-
 export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
-export function setPosts(newPosts) {
-  posts = newPosts
-}
+
+
 
 export const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
+
 export const logout = () => {
   user = null;
   removeUserFromLocalStorage();
   goToPage(POSTS_PAGE);
 };
+
 /**
  * Включает страницу приложения
  */
+function getAPI() {
+  return getPosts({ token: getToken() })
+    .then((newPosts) => {
+      if (newPosts && newPosts.length > 0) {
+        console.log('new posts', newPosts)
+      page = POSTS_PAGE;
+      posts = newPosts;
+      renderApp();
+      } else {
+        console.log("No posts available.");
+        // Можно выполнить дополнительные действия в случае отсутствия постов, например, показать сообщение об отсутствии данных
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      //goToPage(POSTS_PAGE);
+    });
+  }
+
 
 export const goToPage = (newPage, data) => {
   if (
@@ -51,44 +70,31 @@ export const goToPage = (newPage, data) => {
       // Если пользователь не авторизован, то отправляем его на авторизацию перед добавлением поста
       page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
       return renderApp();
-    }
-    if (newPage === POSTS_PAGE) {
+    } else if (newPage === POSTS_PAGE) {
       page = LOADING_PAGE;
+      //renderApp();
+      getAPI();
+    } else if (newPage === USER_POSTS_PAGE) {
+      console.log("Открываю страницу пользователя: ", data.userId);
+      page =  LOADING_PAGE;
       renderApp();
-      return getPosts({ token: getToken() })
+      
+      return fetchPostsUser(data.userId, { token: getToken() })
         .then((newPosts) => {
-          page = POSTS_PAGE;
+          page = USER_POSTS_PAGE;
           posts = newPosts;
+    
           renderApp();
         })
         .catch((error) => {
           console.error(error);
-          goToPage(POSTS_PAGE);
         });
-    }
-
-    if (newPage === USER_POSTS_PAGE) {
-      // TODO: реализовать получение постов юзера из API
-      page = USER_POSTS_PAGE;
+    } 
+      page = newPage;
       renderApp();
-
-      return getUserPosts(data.userId)
-      .then((responseData) => {
-        posts = [];
-        posts = responseData.posts;
-        renderApp();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-      // console.log("Открываю страницу пользователя: ", data.userId);
+      return;
     }
-    page = newPage;
-    renderApp();
-
-    return;
-  }
-  throw new Error("страницы не существует");
+  throw new Error("Страницы не существует");
 };
 
 export const renderApp = () => {
@@ -112,34 +118,59 @@ export const renderApp = () => {
       goToPage,
     });
   }
+
+
   if (page === ADD_POSTS_PAGE) {
     return renderAddPostPageComponent({
       appEl,
-      onAddPostClick() {  
-        postPosts({ 
-          description: sanitizeHtml(textEl.value),
-          imageUrl: imageUrl, 
-        }).then(() => {
-          goToPage(POSTS_PAGE);
-        }) 
-        // TODO: реализовать добавление поста в API
-         // console.log("Добавляю пост...", { description, imageUrl });
-      },
+      onAddPostClick({ description, imageUrl }) {
+       
+        console.log("Добавляю пост...", { description, imageUrl });
+       postPosts ({ token: getToken(), description, imageUrl })
+       .then(() => {     
+         goToPage(POSTS_PAGE);
+    })
+    .catch((error) => {
+      // В объекте error есть ключ message, в котором лежит сообщение об ошибке
+      // Если сервер сломался, то просим попробовать позже
+      if (error.message === "Сервер сломался") {
+        alert("Сервер сломался, попробуйте позже");
+        postPosts({ token: getToken(), description, imageUrl });
+      }  else {
+          alert('Кажется, у вас не работает интернет, попробуйте позже');
+          console.log(error);
+        }
     });
-  }
+
+
+  },
+});
+}
+
   if (page === POSTS_PAGE) {
     return renderPostsPageComponent({
-      appEl,
+      appEl, userView: false,
     });
   }
 
   if (page === USER_POSTS_PAGE) {
     // TODO: реализовать страницу фотографию пользвателя
-     // appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-     return renderUserPostsPageComponent({
-      appEl,
+    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
+    return renderPostsPageComponent({
+      appEl, 
+      userView: true,
     });
   }
 };
 
 goToPage(POSTS_PAGE);
+
+export function deletePost( id ) {
+  if (user) {
+    deletefetchPost({ token: getToken() },  id)
+    .then((newPosts) => {
+    posts = newPosts;
+    //return renderApp();  
+    });
+  }
+}
